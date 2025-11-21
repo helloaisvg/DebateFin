@@ -3,6 +3,9 @@
 
 DebateFin是一个基于LLM的多智能体系统，用于企业基本面分析，通过结构化辩论（Analyst、Risk、Trader智能体）来减少金融推理中的幻觉。
 
+在线实时
+https://debatefin.streamlit.app
+
 ##  核心架构
 
 ### 技术栈
