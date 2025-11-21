@@ -21,7 +21,7 @@ DebateFin是一个基于LLM的多智能体系统，用于企业基本面分析�
   - **HuggingFace**: 新闻情感分析
   - **VectorBT**: 回测（可选）
 - **前端**: Streamlit 交互式界面
-- **PDF生成**: WeasyPrint（完美支持中文）
+- **报告生成**: HTML格式
 - **安全**: API密钥通过Streamlit secrets管理；工具接地避免幻觉
 
 ##  主要功能
@@ -192,7 +192,7 @@ DebateFin/
 ├── app.py                 # Streamlit主应用 + LangGraph后端
 ├── tools.py               # 工具函数（数据获取、指标计算、预测、回测）
 ├── models.py              # PyTorch LSTM模型
-├── report_generator.py    # PDF报告生成器（WeasyPrint）
+├── report_generator.py    # HTML报告生成器
 ├── cache_utils.py         # 缓存工具
 ├── guardrail_validator.py # 工具强制校验器
 ├── hallucination_checker.py # 幻觉检查器
@@ -217,7 +217,7 @@ DebateFin/
 - `transformers`: 情感分析
 - `plotly`: 交互式图表
 - `vectorbt`: 回测（可选）
-- `weasyprint`: PDF生成（完美支持中文）
+- HTML报告生成（零依赖，无需额外库）
 
 完整列表见 `requirements.txt`。
 
@@ -252,12 +252,14 @@ DebateFin/
 2. Streamlit 缓存（1小时内不重复请求）
 3. yfinance 实时获取（最后兜底）
 
-### PDF 报告生成
+### HTML 报告生成
 
-使用 **WeasyPrint** 专业 PDF 库，完美支持中文：
-- 基于 HTML/CSS 渲染
-- 自动使用系统中文字体
+使用 **HTML 格式**生成报告，零依赖，完美支持 Streamlit Cloud：
+- 基于 HTML/CSS 渲染，完美支持中文
+- 零系统依赖，Streamlit Cloud 原生支持
 - 支持复杂的表格和样式
+- 可在浏览器中打开后使用"打印"功能（Ctrl+P / Cmd+P）导出为 PDF
+- 无需安装 Pango/Cairo/GDK-PixBuf 等系统级图形库
 
 ##  贡献
 

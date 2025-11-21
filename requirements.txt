@@ -30,8 +30,8 @@ seaborn>=0.12.0
 # Backtesting (optional)
 vectorbt>=0.25.0
 
-# PDF Generation (使用 WeasyPrint，完美支持中文)
-weasyprint>=60.0
+# Report Generation (使用 HTML，零依赖，Streamlit Cloud 原生支持)
+# HTML 报告可在浏览器中打开后使用"打印为PDF"功能导出
 
 # Utilities
 python-dotenv>=1.0.0

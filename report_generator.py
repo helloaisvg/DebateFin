@@ -1,6 +1,5 @@
 """
-PDF report generator for DebateFin analysis results
-使用 WeasyPrint 专业 PDF 库，完美支持中文
+HTML report generator for DebateFin analysis results
 """
 
 from io import BytesIO
@@ -9,17 +8,10 @@ from typing import Dict, Any
 import json
 import html
 
-try:
-    from weasyprint import HTML, CSS
-    from weasyprint.text.fonts import FontConfiguration
-    WEASYPRINT_AVAILABLE = True
-except ImportError:
-    WEASYPRINT_AVAILABLE = False
 
-
-def generate_pdf_report(data: Dict[str, Any]) -> BytesIO:
+def generate_html_report(data: Dict[str, Any]) -> str:
     """
-    Generate PDF report from analysis results using WeasyPrint (完美支持中文)
+    Generate HTML report from analysis results (完美支持中文，零依赖)
     
     Args:
         data: Dictionary containing:
@@ -29,11 +21,8 @@ def generate_pdf_report(data: Dict[str, Any]) -> BytesIO:
             - hallucination_checks: Optional hallucination check results
     
     Returns:
-        BytesIO buffer containing PDF
+        Complete HTML string with embedded CSS styles
     """
-    if not WEASYPRINT_AVAILABLE:
-        raise ImportError("weasyprint is required for PDF generation. Install with: pip install weasyprint")
-    
     # Extract data
     analysis = data.get("analysis", data)  # Backward compatibility
     debate_logs = data.get("debate_logs", [])
@@ -41,19 +30,29 @@ def generate_pdf_report(data: Dict[str, Any]) -> BytesIO:
     hallucination_checks = data.get("hallucination_checks", [])
     
     # Build HTML content
-    html_content = build_html_report(analysis, debate_logs, ablation_results, hallucination_checks)
+    html_body = build_html_report(analysis, debate_logs, ablation_results, hallucination_checks)
     
-    # CSS styles (完美支持中文)
+    # CSS styles 
     css_content = """
-    @page {
-        size: A4;
-        margin: 2cm;
+    <style>
+    @media print {
+        @page {
+            size: A4;
+            margin: 2cm;
+        }
+        .page-break {
+            page-break-before: always;
+        }
     }
     body {
         font-family: "SimSun", "宋体", "Microsoft YaHei", "微软雅黑", "Arial", sans-serif;
         font-size: 12pt;
         line-height: 1.6;
         color: #333;
+        max-width: 210mm;
+        margin: 0 auto;
+        padding: 20px;
+        background-color: #fff;
     }
     h1 {
         font-size: 24pt;
@@ -115,26 +114,41 @@ def generate_pdf_report(data: Dict[str, Any]) -> BytesIO:
         border-top: 1px solid #ddd;
     }
     .page-break {
-        page-break-before: always;
+        margin-top: 30px;
+        border-top: 2px solid #ddd;
+        padding-top: 20px;
     }
+    </style>
     """
     
-    # Generate PDF
-    buffer = BytesIO()
-    font_config = FontConfiguration()
-    html_doc = HTML(string=html_content)
-    css_doc = CSS(string=css_content, font_config=font_config)
-    html_doc.write_pdf(buffer, stylesheets=[css_doc], font_config=font_config)
-    buffer.seek(0)
+    # Combine CSS and HTML body
+    full_html = f'<html><head><meta charset="UTF-8">{css_content}</head>{html_body}</html>'
     
+    return full_html
+
+
+def generate_html_report_bytes(data: Dict[str, Any]) -> BytesIO:
+    """
+    Generate HTML report as BytesIO buffer for download
+    
+    Args:
+        data: Dictionary containing analysis results
+    
+    Returns:
+        BytesIO buffer containing HTML
+    """
+    html_content = generate_html_report(data)
+    buffer = BytesIO()
+    buffer.write(html_content.encode('utf-8'))
+    buffer.seek(0)
     return buffer
 
 
 def build_html_report(analysis: Dict, debate_logs: list, ablation_results: Dict, hallucination_checks: list) -> str:
-    """构建 HTML 报告内容"""
+    """构建 HTML 报告内容（仅 body 部分）"""
     
     # Title
-    html_parts = ['<html><head><meta charset="UTF-8"></head><body>']
+    html_parts = ['<body>']
     html_parts.append('<h1>DebateFin 金融分析报告</h1>')
     
     # Metadata
@@ -250,10 +264,11 @@ def build_html_report(analysis: Dict, debate_logs: list, ablation_results: Dict,
     
     # Footer
     html_parts.append('<div class="footer">')
-    html_parts.append('<p><em>本报告由DebateFin多智能体系统生成 | ICLR 2026 Workshop</em></p>')
+    html_parts.append('<p><em>本报告由DebateFin多智能体系统生成 | helloaisvg</em></p>')
+    html_parts.append('<p><em>提示：在浏览器中打开此HTML文件后，可使用"打印"功能导出为PDF</em></p>')
     html_parts.append('</div>')
     
-    html_parts.append('</body></html>')
+    html_parts.append('</body>')
     
     return ''.join(html_parts)
 

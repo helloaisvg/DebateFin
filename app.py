@@ -57,13 +57,7 @@ except ImportError:
     VBT_AVAILABLE = False
     # Note: st.warning() cannot be called at module level, will handle in main()
 
-# PDF generation (使用 WeasyPrint，完美支持中文)
-try:
-    from weasyprint import HTML, CSS
-    WEASYPRINT_AVAILABLE = True
-except ImportError:
-    WEASYPRINT_AVAILABLE = False
-
+# Report generation (使用 HTML，零依赖，Streamlit Cloud 原生支持)
 # Import custom modules
 from tools import (
     fetch_stock_data, calculate_financial_metrics, 
@@ -71,7 +65,7 @@ from tools import (
     get_price_history  # 缓存的价格历史函数
 )
 from models import LSTMGrowthPredictor
-from report_generator import generate_pdf_report
+from report_generator import generate_html_report_bytes
 from cache_utils import cached_with_retry, clear_cache
 from hallucination_checker import hallucination_checker
 from guardrail_validator import guardrail_validator
@@ -1500,27 +1494,26 @@ def main():
                 include_debate_logs = st.checkbox("包含辩论日志", value=True)
                 include_ablation = st.checkbox("包含消融研究结果", value=bool(st.session_state.ablation_results))
             
-            if WEASYPRINT_AVAILABLE and st.button("生成PDF报告", type="primary"):
+            if st.button("生成HTML报告", type="primary"):
                 try:
-                    pdf_data = {
+                    report_data = {
                         "analysis": analysis,
                         "debate_logs": st.session_state.debate_logs if include_debate_logs else [],
                         "ablation_results": st.session_state.ablation_results if include_ablation else None,
                         "hallucination_checks": st.session_state.hallucination_checks
                     }
-                    pdf_buffer = generate_pdf_report(pdf_data)
+                    html_buffer = generate_html_report_bytes(report_data)
                     st.download_button(
-                        label="📥 下载PDF报告",
-                        data=pdf_buffer.getvalue(),
-                        file_name=f"DebateFin_Report_{analysis.get('ticker', 'UNKNOWN')}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf",
-                        mime="application/pdf",
+                        label="📥 下载HTML报告",
+                        data=html_buffer.getvalue(),
+                        file_name=f"DebateFin_Report_{analysis.get('ticker', 'UNKNOWN')}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.html",
+                        mime="text/html",
                         use_container_width=True
                     )
+                    st.info('💡 提示：下载HTML文件后，可在浏览器中打开，然后使用浏览器的"打印"功能（Ctrl+P / Cmd+P）导出为PDF')
                 except Exception as e:
-                    st.error(f"PDF生成失败: {str(e)}")
+                    st.error(f"HTML报告生成失败: {str(e)}")
                     st.exception(e)
-            elif not WEASYPRINT_AVAILABLE:
-                st.info("⚠️ PDF生成功能需要weasyprint库。请运行: `pip install weasyprint`")
     
     # Footer
     st.divider()
